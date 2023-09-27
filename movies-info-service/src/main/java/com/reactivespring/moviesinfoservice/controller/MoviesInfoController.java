@@ -2,6 +2,7 @@ package com.reactivespring.moviesinfoservice.controller;
 
 import com.reactivespring.moviesinfoservice.domain.MovieInfo;
 import com.reactivespring.moviesinfoservice.service.MoviesInfoService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -35,13 +36,13 @@ public class MoviesInfoController {
 
     @PostMapping("/movieinfos")
     @ResponseStatus(HttpStatus.CREATED)
-    public Mono<MovieInfo> create(@RequestBody MovieInfo movieInfo) {
+    public Mono<MovieInfo> create(@RequestBody @Valid MovieInfo movieInfo) {
         return service.addMovieInfo(movieInfo);
     }
 
     @PutMapping("/movieinfos/{id}")
     @ResponseStatus(HttpStatus.OK)
-    public Mono<MovieInfo> create(@RequestBody MovieInfo movieInfo, @PathVariable String id) {
+    public Mono<MovieInfo> create(@RequestBody @Valid MovieInfo movieInfo, @PathVariable String id) {
         return service.updateMovieInfo(movieInfo, id);
     }
 
