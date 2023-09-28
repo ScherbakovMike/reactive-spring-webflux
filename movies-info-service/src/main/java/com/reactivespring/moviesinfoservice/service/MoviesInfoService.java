@@ -41,4 +41,12 @@ public class MoviesInfoService {
                 .switchIfEmpty(Mono.error(() -> new IllegalArgumentException("Not found")))
                 .flatMap(saved -> repository.deleteById(id));
     }
+
+    public Flux<MovieInfo> getByYear(Integer year) {
+        return repository.findMovieInfoByYear(year);
+    }
+
+    public Flux<MovieInfo> getByName(String name) {
+        return repository.findMovieInfoByName(name);
+    }
 }

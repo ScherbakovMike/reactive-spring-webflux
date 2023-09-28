@@ -67,6 +67,22 @@ class MovieInfoRepositoryIntegrationTest {
     }
 
     @Test
+    void findByName() {
+        var moviesInfoMono = repository.findMovieInfoByName("Dark Knight Rises");
+        StepVerifier.create(moviesInfoMono)
+                .assertNext(movieInfo -> assertEquals("Dark Knight Rises", movieInfo.getName()))
+                .verifyComplete();
+    }
+
+    @Test
+    void findByYear() {
+        var moviesInfoMono = repository.findMovieInfoByYear(2005);
+        StepVerifier.create(moviesInfoMono)
+                .assertNext(movieInfo -> assertEquals("Batman Begins", movieInfo.getName()))
+                .verifyComplete();
+    }
+
+    @Test
     void saveMovieInfo() {
         var movieInfo = new MovieInfo(null,
                 "Batman Begins1",

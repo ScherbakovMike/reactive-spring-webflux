@@ -1,3 +1,6 @@
+server:
+  port: 8082
+
 de:
   flapdoodle:
     mongodb:
@@ -31,4 +34,5 @@ spring:
 logging:
   level:
     root: info
+
 

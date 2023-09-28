@@ -10,6 +10,7 @@ import org.springframework.boot.test.autoconfigure.web.reactive.AutoConfigureWeb
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.reactive.server.WebTestClient;
+import org.springframework.web.util.UriComponentsBuilder;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -90,6 +91,32 @@ class MoviesInfoControllerTest {
     }
 
     @Test
+    void getAllByTear() {
+        var uri = UriComponentsBuilder.fromUriString(MOVIES_INFO_URL)
+                        .queryParam("year", 2005)
+                                .buildAndExpand().toUri();
+        client.get()
+                .uri(uri)
+                .exchange()
+                .expectStatus().is2xxSuccessful()
+                .expectBodyList(MovieInfo.class)
+                .hasSize(1);
+    }
+
+    @Test
+    void getAllByName() {
+        var uri = UriComponentsBuilder.fromUriString(MOVIES_INFO_URL)
+                .queryParam("name", "Dark Knight Rises")
+                .buildAndExpand().toUri();
+        client.get()
+                .uri(uri)
+                .exchange()
+                .expectStatus().is2xxSuccessful()
+                .expectBodyList(MovieInfo.class)
+                .hasSize(1);
+    }
+
+    @Test
     void getById() {
         var movieInfoId = "abc";
         client.get()
@@ -98,6 +125,15 @@ class MoviesInfoControllerTest {
                 .expectStatus().is2xxSuccessful()
                 .expectBody()
                 .jsonPath("$.name").isEqualTo("Dark Knight Rises");
+    }
+
+    @Test
+    void getById_not_found() {
+        var movieInfoId = "def";
+        client.get()
+                .uri(MOVIES_INFO_URL+"/{id}", movieInfoId)
+                .exchange()
+                .expectStatus().isNotFound();
     }
 
     @Test
@@ -121,6 +157,22 @@ class MoviesInfoControllerTest {
                     assert updatedMovieInfo.getMovieInfoId() != null;
                     assertEquals("Batman Begins2", updatedMovieInfo.getName());
                 });
+    }
+
+    @Test
+    void updateMovieInfo_not_found() {
+        var movieInfoId = "def";
+        var movieInfo = new MovieInfo(null,
+                "Batman Begins2",
+                2005,
+                List.of("Christian Bale", "Michael Cane"),
+                LocalDate.parse("2005-06-15"));
+
+        client.put()
+                .uri(MOVIES_INFO_URL+"/{id}", movieInfoId)
+                .bodyValue(movieInfo)
+                .exchange()
+                .expectStatus().isNotFound();
     }
 
     @Test

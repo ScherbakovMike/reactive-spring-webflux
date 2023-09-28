@@ -111,7 +111,7 @@ class MoviesInfoControllerUnitTest {
         var movieInfo = new MovieInfo(null,
                 "",
                 null,
-                List.of("Christian Bale", "Michael Cane"),
+                List.of("", "Michael Cane"),
                 LocalDate.parse("2005-06-15"));
 
         when(service.addMovieInfo(isA(MovieInfo.class))).thenReturn(
@@ -128,7 +128,11 @@ class MoviesInfoControllerUnitTest {
                 .exchange()
                 .expectStatus().isBadRequest()
                 .expectBody(String.class)
-                .consumeWith(response -> System.out.println(response.getResponseBody()));
+                .consumeWith(response -> {
+                    var responseBody = response.getResponseBody();
+                    var expectedErrorMessage = "movieInfo.cast must be present, movieInfo.name must be present, must not be null";
+                    assertThat(responseBody).isEqualTo(expectedErrorMessage);
+                });
     }
 
 
@@ -158,7 +162,7 @@ class MoviesInfoControllerUnitTest {
                 .consumeWith(movieInfoEntityExchangeResult -> {
                     var updatedMovieInfo = movieInfoEntityExchangeResult.getResponseBody();
                     assert updatedMovieInfo != null;
-                    assertEquals(movieInfoId, updatedMovieInfo.getMovieInfoId());
+                    assertEquals("mockId", updatedMovieInfo.getMovieInfoId());
                     assertEquals("Batman Begins2", updatedMovieInfo.getName());
                 });
     }
