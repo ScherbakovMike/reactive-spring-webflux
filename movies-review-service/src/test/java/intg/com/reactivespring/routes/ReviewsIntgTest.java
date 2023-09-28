@@ -80,7 +80,7 @@ class ReviewsIntgTest {
     }
 
     @Test
-    void getReviewById() {
+    void getReviewByMovieInfoId() {
         var review = new Review(null, 1L, "Awesome Movie", 9.0);
 
         var addResponse = client
