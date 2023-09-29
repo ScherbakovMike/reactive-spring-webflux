@@ -188,7 +188,7 @@ class MoviesInfoControllerTest {
         client.get()
                 .uri(MOVIES_INFO_URL + "/{id}", movieInfoId)
                 .exchange()
-                .expectStatus().isOk()
+                .expectStatus().isNotFound()
                 .expectBody(MovieInfo.class)
                 .consumeWith(entityExchangeResult -> {
                     var response = entityExchangeResult.getResponseBody();

@@ -1,8 +1,13 @@
 package com.reactivespring.handler;
 
 import com.reactivespring.domain.Review;
+import com.reactivespring.exception.ReviewDataException;
+import com.reactivespring.exception.ReviewNotFoundException;
 import com.reactivespring.repository.ReviewReactiveRepository;
+import jakarta.validation.ConstraintViolation;
+import jakarta.validation.Validator;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.server.ServerRequest;
@@ -10,17 +15,33 @@ import org.springframework.web.reactive.function.server.ServerResponse;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+import java.util.stream.Collectors;
+
 @Component
 @RequiredArgsConstructor
+@Slf4j
 public class ReviewHandler {
 
     private final ReviewReactiveRepository repository;
+    private final Validator validator;
 
     public Mono<ServerResponse> addReview(ServerRequest request) {
         return request.bodyToMono(Review.class)
+                .doOnNext(this::validate)
                 .flatMap(repository::save)
                 .flatMap(savedReview -> ServerResponse.status(HttpStatus.CREATED)
                         .bodyValue(savedReview));
+    }
+
+    private void validate(Review review) {
+        var violations = validator.validate(review);
+        log.info("constraint validations : {}", violations);
+        if (!violations.isEmpty()) {
+            var errors = violations.stream().map(ConstraintViolation::getMessage)
+                    .sorted()
+                    .collect(Collectors.joining(","));
+            throw new ReviewDataException(errors);
+        }
     }
 
     public Mono<ServerResponse> getReviews(ServerRequest request) {
@@ -40,17 +61,20 @@ public class ReviewHandler {
 
     public Mono<ServerResponse> updateReview(ServerRequest request) {
         var reviewId = request.pathVariable("id");
-        var existingReview = repository.findById(reviewId);
-        return existingReview.flatMap(review -> request.bodyToMono(Review.class)
-                .map(reqReview -> {
-                    System.out.println("Existing review: " + existingReview);
-                    review.setComment(reqReview.getComment());
-                    review.setRating(reqReview.getRating());
-                    return review;
-                })
-                .flatMap(repository::save)
-                .flatMap(savedReview -> ServerResponse.ok().bodyValue(savedReview))
-        );
+        var existingReview = repository.findById(reviewId)
+                .switchIfEmpty(Mono.error(new ReviewNotFoundException("Review not found for the given reviewId")));
+        return existingReview
+                .flatMap(review -> request.bodyToMono(Review.class)
+                        .map(reqReview -> {
+                            System.out.println("Existing review: " + existingReview);
+                            review.setComment(reqReview.getComment());
+                            review.setRating(reqReview.getRating());
+                            return review;
+                        })
+                        .flatMap(repository::save)
+                        .flatMap(savedReview -> ServerResponse.ok().bodyValue(savedReview))
+                )
+                .switchIfEmpty(ServerResponse.notFound().build());
     }
 
     public Mono<ServerResponse> deleteReview(ServerRequest request) {

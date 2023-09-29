@@ -34,7 +34,7 @@ public class MoviesInfoController {
         if (year != null) {
             return service.getByYear(year);
         }
-        if (!name.isBlank()) {
+        if (name!=null) {
             return service.getByName(name);
         }
         return service.getAll();
