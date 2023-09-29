@@ -30,9 +30,10 @@ dependencies {
 	implementation 'org.springframework.boot:spring-boot-starter-webflux'
 	compileOnly 'org.projectlombok:lombok'
 	annotationProcessor 'org.projectlombok:lombok'
-	testImplementation 'org.springframework.boot:spring-boot-starter-test'
 
 	//test
+	testImplementation 'org.springframework.cloud:spring-cloud-starter-contract-stub-runner:4.0.0'
+	testImplementation 'org.springframework.boot:spring-boot-starter-test'
 	testImplementation 'de.flapdoodle.embed:de.flapdoodle.embed.mongo.spring30x:4.9.3'
 	testImplementation 'io.projectreactor:reactor-test'
 }

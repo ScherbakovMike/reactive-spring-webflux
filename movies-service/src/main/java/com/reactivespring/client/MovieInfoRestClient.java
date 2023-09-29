@@ -2,6 +2,7 @@ package com.reactivespring.client;
 
 import com.reactivespring.domain.MovieInfo;
 import com.reactivespring.exception.MoviesInfoClientException;
+import com.reactivespring.util.RetryUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -22,6 +23,7 @@ public class MovieInfoRestClient {
     private final WebClient client;
 
     public Mono<MovieInfo> retrieveMovieInfo(String movieId) {
+
         return client.get()
                 .uri(moviesInfoUrl+"/{id}", movieId)
                 .retrieve()
@@ -40,10 +42,12 @@ public class MovieInfoRestClient {
                     log.info("Status code is : {}", response.statusCode().value());
                     return response.bodyToMono(String.class)
                             .flatMap(responseMessage -> Mono.error(new MoviesInfoClientException(
-                                    "Server exception caught : {}", response.statusCode().value()
+                                    "Server exception caught : " + responseMessage, response.statusCode().value()
                             )));
                 })
                 .bodyToMono(MovieInfo.class)
+                //.retry(3)
+                .retryWhen(RetryUtil.retrySpec())
                 .log();
     }
 }

@@ -8,3 +8,8 @@ rest-client:
   movies-info-url: http://localhost:8080/v1/movieinfos
   reviews-url: http://localhost:8082/v1/reviews
 
+de:
+  flapdoodle:
+    mongodb:
+      embedded:
+        version: 4.0.2
