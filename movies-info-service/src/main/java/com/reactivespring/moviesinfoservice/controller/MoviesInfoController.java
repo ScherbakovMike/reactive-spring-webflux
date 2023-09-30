@@ -18,6 +18,8 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+import reactor.core.publisher.Sinks;
+import org.springframework.http.MediaType;
 
 @RestController
 @RequestMapping("/v1")
@@ -25,6 +27,8 @@ import reactor.core.publisher.Mono;
 public class MoviesInfoController {
 
     private final MoviesInfoService service;
+
+    Sinks.Many<MovieInfo> movieInfoSink = Sinks.many().replay().all();
 
     @GetMapping("/movieinfos")
     public Flux<MovieInfo> getAll(
@@ -34,7 +38,7 @@ public class MoviesInfoController {
         if (year != null) {
             return service.getByYear(year);
         }
-        if (name!=null) {
+        if (name != null) {
             return service.getByName(name);
         }
         return service.getAll();
@@ -47,10 +51,16 @@ public class MoviesInfoController {
                 .switchIfEmpty(Mono.just(ResponseEntity.notFound().build()));
     }
 
+    @GetMapping(value = "/movieinfos/stream", produces = MediaType.APPLICATION_NDJSON_VALUE)
+    public Flux<MovieInfo> getById() {
+        return movieInfoSink.asFlux();
+    }
+
     @PostMapping("/movieinfos")
     @ResponseStatus(HttpStatus.CREATED)
     public Mono<MovieInfo> create(@RequestBody @Valid MovieInfo movieInfo) {
-        return service.addMovieInfo(movieInfo);
+        return service.addMovieInfo(movieInfo)
+                .doOnNext(savedInfo -> movieInfoSink.tryEmitNext(savedInfo));
     }
 
     @PutMapping("/movieinfos/{id}")
